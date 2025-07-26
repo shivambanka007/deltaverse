@@ -1,0 +1,291 @@
+openapi: 3.0.3
+info:
+  title: Fi-MCP API
+  description: |
+    Financial MCP (Model Context Protocol) server that provides secure access to users' financial data through Fi Money.
+    
+    ## Authentication Flow
+    1. Generate a unique sessionId
+    2. Visit `/mockWebPage?sessionId={sessionId}` to get login form
+    3. Submit phone number via `/login` endpoint
+    4. Use authenticated sessionId for MCP tool calls
+    
+    ## Available Financial Tools
+    - Net worth analysis with asset/liability breakdowns
+    - Credit reports with scores and loan details
+    - EPF account information and transaction history
+    - Mutual fund and stock transaction histories
+    - Bank transaction data from connected accounts
+  version: 0.1.0
+  contact:
+    name: Fi-MCP Development Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /mockWebPage:
+    get:
+      summary: Get login page for session authentication
+      description: Returns an HTML login form for the specified session ID
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          description: Unique session identifier
+          schema:
+            type: string
+            example: "abc123"
+      responses:
+        '200':
+          description: HTML login form
+          content:
+            text/html:
+              schema:
+                type: string
+        '400':
+          description: Bad request - sessionId is required
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "sessionId is required"
+
+  /login:
+    post:
+      summary: Authenticate session with phone number
+      description: Associates a phone number with a session ID for authentication
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - phoneNumber
+              properties:
+                sessionId:
+                  type: string
+                  description: Session identifier from mockWebPage
+                  example: "abc123"
+                phoneNumber:
+                  type: string
+                  description: User's phone number (must be in allowed list)
+                  example: "+1234567890"
+      responses:
+        '200':
+          description: Login successful - HTML success page
+          content:
+            text/html:
+              schema:
+                type: string
+        '400':
+          description: Bad request - missing required parameters
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "sessionId and phoneNumber are required"
+
+  /mcp/:
+    get:
+      summary: MCP streaming endpoint for tool calls
+      description: |
+        Model Context Protocol endpoint for executing financial data tools.
+        Requires authenticated session ID. This endpoint uses MCP protocol
+        for communication with MCP-compatible clients.
+      parameters:
+        - name: sessionId
+          in: header
+          required: true
+          description: Authenticated session identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: MCP protocol response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["success", "login_required", "error"]
+                  data:
+                    type: object
+                    description: Tool execution result
+                  login_url:
+                    type: string
+                    description: Login URL if authentication required
+                  message:
+                    type: string
+                    description: Status message
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "login_required"
+                  login_url:
+                    type: string
+                    example: "http://localhost:8080/mockWebPage?sessionId=abc123"
+                  message:
+                    type: string
+                    example: "Needs to login first by going to the login url"
+
+  /static/{filename}:
+    get:
+      summary: Serve static files
+      description: Serves static HTML, CSS, JS files
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          description: Static file name
+          schema:
+            type: string
+            example: "login_successful.html"
+      responses:
+        '200':
+          description: Static file content
+        '404':
+          description: File not found
+
+components:
+  schemas:
+    FinancialTool:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: 
+            - "fetch_net_worth"
+            - "fetch_credit_report"
+            - "fetch_epf_details"
+            - "fetch_mf_transactions"
+            - "fetch_bank_transactions"
+            - "fetch_stock_transactions"
+        description:
+          type: string
+      
+    NetWorthData:
+      type: object
+      description: Comprehensive net worth calculation
+      properties:
+        total_assets:
+          type: number
+          description: Total value of all assets
+        total_liabilities:
+          type: number
+          description: Total value of all liabilities
+        net_worth:
+          type: number
+          description: Assets minus liabilities
+        bank_balances:
+          type: array
+          items:
+            type: object
+        mutual_funds:
+          type: array
+          items:
+            type: object
+        stocks:
+          type: array
+          items:
+            type: object
+        epf_balance:
+          type: number
+        credit_card_debt:
+          type: number
+        loans:
+          type: array
+          items:
+            type: object
+
+    CreditReport:
+      type: object
+      description: Credit report with scores and history
+      properties:
+        credit_score:
+          type: number
+          description: Current credit score
+        date_of_birth:
+          type: string
+          format: date
+          description: User's date of birth
+        active_loans:
+          type: array
+          items:
+            type: object
+        credit_cards:
+          type: array
+          items:
+            type: object
+        payment_history:
+          type: array
+          items:
+            type: object
+        recent_inquiries:
+          type: array
+          items:
+            type: object
+
+    EPFDetails:
+      type: object
+      description: EPF account information
+      properties:
+        account_balance:
+          type: number
+          description: Current EPF balance
+        employee_contributions:
+          type: array
+          items:
+            type: object
+        employer_contributions:
+          type: array
+          items:
+            type: object
+        interest_earned:
+          type: number
+          description: Total interest earned
+
+    TransactionHistory:
+      type: object
+      description: Transaction history for various account types
+      properties:
+        transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              amount:
+                type: number
+              description:
+                type: string
+              type:
+                type: string
+                enum: ["credit", "debit", "buy", "sell"]
+
+tags:
+  - name: Authentication
+    description: Session management and authentication endpoints
+  - name: MCP Tools
+    description: Financial data tools accessible via MCP protocol
+  - name: Static Files
+    description: Static file serving endpoints
+
+externalDocs:
+  description: Fi Money Platform
+  url: https://fi.money

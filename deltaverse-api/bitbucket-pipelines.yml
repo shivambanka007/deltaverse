@@ -1,0 +1,129 @@
+# Bitbucket Pipelines configuration for automated CI/CD
+# Deploys to Google Cloud Run via Google Artifact Registry
+
+image: python:3.11-slim
+
+# Define reusable steps
+definitions:
+  services:
+    docker:
+      memory: 2048
+  
+  caches:
+    pip: ~/.cache/pip
+  
+  steps:
+    - step: &lint-and-test
+        name: Lint and Test
+        caches:
+          - pip
+        script:
+          # Install dependencies
+          - pip install -r requirements-dev.txt
+          # Run linting with Black
+          - black --check app/
+          # Run tests with pytest
+          - pytest app/tests/ -v --tb=short
+        artifacts:
+          - test-reports/**
+    
+    - step: &build-and-push
+        name: Build and Push to GAR
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          # Authenticate with Google Cloud using service account key
+          - echo $GCP_SA_KEY | base64 -d > gcp-key.json
+          - export GOOGLE_APPLICATION_CREDENTIALS=gcp-key.json
+          
+          # Install Google Cloud SDK
+          - apt-get update && apt-get install -y curl gnupg
+          - echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          - curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+          - apt-get update && apt-get install -y google-cloud-cli
+          
+          # Configure Docker to use gcloud as credential helper
+          - gcloud auth activate-service-account --key-file=gcp-key.json
+          - gcloud config set project $GCP_PROJECT_ID
+          - gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+          
+          # Build and tag Docker image
+          - export IMAGE_TAG="$GAR_LOCATION-docker.pkg.dev/$GCP_PROJECT_ID/$GAR_REPOSITORY/$GAR_IMAGE_NAME:$BITBUCKET_COMMIT"
+          - export IMAGE_LATEST="$GAR_LOCATION-docker.pkg.dev/$GCP_PROJECT_ID/$GAR_REPOSITORY/$GAR_IMAGE_NAME:latest"
+          - docker build -t $IMAGE_TAG -t $IMAGE_LATEST .
+          
+          # Push image to Google Artifact Registry
+          - docker push $IMAGE_TAG
+          - docker push $IMAGE_LATEST
+          
+          # Clean up credentials
+          - rm gcp-key.json
+    
+    - step: &deploy-to-cloud-run
+        name: Deploy to Cloud Run
+        script:
+          # Authenticate with Google Cloud
+          - echo $GCP_SA_KEY | base64 -d > gcp-key.json
+          - export GOOGLE_APPLICATION_CREDENTIALS=gcp-key.json
+          
+          # Install Google Cloud SDK
+          - apt-get update && apt-get install -y curl gnupg
+          - echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          - curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+          - apt-get update && apt-get install -y google-cloud-cli
+          
+          # Configure gcloud
+          - gcloud auth activate-service-account --key-file=gcp-key.json
+          - gcloud config set project $GCP_PROJECT_ID
+          
+          # Deploy to Cloud Run
+          - export IMAGE_URL="$GAR_LOCATION-docker.pkg.dev/$GCP_PROJECT_ID/$GAR_REPOSITORY/$GAR_IMAGE_NAME:$BITBUCKET_COMMIT"
+          - |
+            gcloud run deploy $CLOUD_RUN_SERVICE_NAME \
+              --image=$IMAGE_URL \
+              --region=$CLOUD_RUN_REGION \
+              --platform=managed \
+              --allow-unauthenticated \
+              --port=8000 \
+              --memory=512Mi \
+              --cpu=1 \
+              --min-instances=0 \
+              --max-instances=10 \
+              --set-env-vars="ENVIRONMENT=production" \
+              --timeout=300
+          
+          # Get service URL
+          - export SERVICE_URL=$(gcloud run services describe $CLOUD_RUN_SERVICE_NAME --region=$CLOUD_RUN_REGION --format='value(status.url)')
+          - echo "Service deployed at: $SERVICE_URL"
+          
+          # Clean up credentials
+          - rm gcp-key.json
+
+# Pipeline configuration
+pipelines:
+  # Run on all branches for testing
+  default:
+    - step: *lint-and-test
+  
+  # Production deployment pipeline (runs on main branch)
+  branches:
+    main:
+      - step: *lint-and-test
+      - step: *build-and-push
+      - step: *deploy-to-cloud-run
+  
+  # Pull request pipeline
+  pull-requests:
+    '**':
+      - step: *lint-and-test
+
+# Required repository variables (set in Bitbucket repository settings):
+# - GCP_PROJECT_ID: Your Google Cloud Project ID
+# - GCP_SA_KEY: Base64 encoded service account key JSON
+# - GAR_LOCATION: Google Artifact Registry location (e.g., us-central1)
+# - GAR_REPOSITORY: Artifact Registry repository name
+# - GAR_IMAGE_NAME: Docker image name (e.g., deltaverse-api)
+# - CLOUD_RUN_SERVICE_NAME: Cloud Run service name
+# - CLOUD_RUN_REGION: Cloud Run deployment region (e.g., us-central1)

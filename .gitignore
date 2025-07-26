@@ -1,0 +1,290 @@
+# ===================================
+# 🔐 SECURITY & CREDENTIALS (CRITICAL - NEVER COMMIT)
+# ===================================
+# Firebase service account keys
+*firebase-adminsdk*.json
+firebase-service-account.json
+*-firebase-adminsdk-*.json
+
+/tmp/gcp-key.json
+
+# Environment files (ALL .env files except .env.example)
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.local
+**/.env.production
+**/.env.development
+**/.env.test
+
+# Google Cloud credentials
+**/credentials/
+vertexai_connect_creds.json
+
+# ===================================
+# 🤖 AUTOMATION & DEVELOPMENT TOOLS (KEEP LOCAL)
+# ===================================
+# Complete automation system - development only
+automation/
+automation/**/*
+
+# Development discussion logs
+**/discussions/
+**/*discussion*.md
+
+# Development test files
+test_*.py
+*_test.py
+test_*.sh
+debug_*.py
+**/test_data_dir/
+# Allowing fi-mcp-dev-master for hackathon
+# fi-mcp-dev-master/
+run_e2e_test.py
+test_intelligent_chat.py
+test_real_fi_mcp_integration.py
+test_e2e_auth_flow.py
+test_frontend_backend_integration.py
+test_firebase_authentication.py
+final_integration_test.py
+final_verification.py
+quick_verify.py
+
+# Development services
+fi_mcp_dev_service.py
+fi_mcp_dev_service_real.py
+
+# ===================================
+# 📚 DOCUMENTATION (ALLOW ESSENTIAL DOCS)
+# ===================================
+# Allow essential documentation files
+*.md
+!README.md
+!**/README.md
+!docs/COMPLETE_USER_FLOW_GUIDE.md
+!docs/VISUAL_FLOW_DIAGRAM.md
+!docs/DEVELOPER_QUICK_REFERENCE.md
+!docs/project-summary.md
+!docs/architecture/*.md
+!docs/deployment/*.md
+
+# Still ignore temporary/generated docs
+PRODUCTION_DEPLOYMENT.md
+
+# Amazon Q rules (development only)
+.amazonq/
+
+# ===================================
+# 📦 DEPENDENCIES & BUILD ARTIFACTS
+# ===================================
+# Node.js
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+package-lock.json
+
+# Build outputs
+build/
+dist/
+**/build/
+**/dist/
+*.tgz
+*.tar.gz
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+**/venv/
+**/.venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+
+# ===================================
+# 🔧 DEVELOPMENT & IDE FILES
+# ===================================
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ===================================
+# 📊 LOGS & TEMPORARY FILES
+# ===================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+/tmp/
+.cache/
+**/coverage/
+
+# ===================================
+# 🧪 TESTING & COVERAGE
+# ===================================
+coverage/
+*.lcov
+.nyc_output/
+.coverage
+htmlcov/
+.pytest_cache/
+**/.pytest_cache/
+
+# ===================================
+# 🐳 DOCKER & DEPLOYMENT
+# ===================================
+# Docker
+.dockerignore.dev
+docker-compose.override.yml
+
+# Deployment artifacts
+*.zip
+*.tar
+deployment-artifacts/
+
+# ===================================
+# 🔄 VERSION CONTROL & CONTEXT
+# ===================================
+# Context files (development only)
+context/
+**/context/
+
+# Git backup files
+.gitignore.bak
+
+# ===================================
+# 📱 FIREBASE & CLOUD
+# ===================================
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Google Cloud
+.gcloudignore
+
+# ===================================
+# 🎯 PROJECT SPECIFIC DEVELOPMENT FILES
+# ===================================
+# Local development configs
+local-config.json
+debug.log
+
+# Development scripts
+setup*.sh
+deploy-*.sh
+**/setup*.sh
+**/deploy-*.sh
+switch_aws.sh
+**/switch_aws.sh
+setup_aws_profile.sh
+**/setup_aws_profile.sh
+
+# Development Python files
+initialize_ai_collections.py
+populate_simple_data.py
+user_fi_mapping_service.py
+
+# Development templates
+.env.template
+
+# ===================================
+# ✅ EXCEPTIONS (Files TO INCLUDE in production)
+# ===================================
+# Keep example environment files
+!.env.example
+!**/.env.example
+
+# Keep essential documentation
+!README.md
+
+# Keep essential config files
+!package.json
+!requirements.txt
+!Dockerfile
+!firebase.json
+!firestore.rules
+!firestore.indexes.json
+
+# ===================================
+# 🚀 PRODUCTION SPECIFIC IGNORES
+# ===================================
+# Development-specific service files
+**/fiLoginPopup.development.js
+**/EnvDebug.js
+**/debug/
+
+# Development backend logs
+backend_dev.log
+backend_prod.log
+frontend*.log
+fi_mcp_server.log
+
+# Build caches and artifacts
+**/node_modules/.cache/
+**/build/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Large files
+*.tar.gz
+*.tgz
+*.zip
+*.rar
+*.7z
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+.DS_Store
+Thumbs.db

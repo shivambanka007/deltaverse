@@ -1,0 +1,148 @@
+.indexeddbErrorContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.errorModal {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  margin: 20px;
+}
+
+.errorHeader h2 {
+  color: #dc2626;
+  margin: 0 0 16px 0;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.errorHeader p {
+  color: #6b7280;
+  margin: 0 0 24px 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.errorDetails h3 {
+  color: #374151;
+  margin: 0 0 12px 0;
+  font-size: 18px;
+}
+
+.errorDetails p {
+  color: #6b7280;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.errorMessage {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 16px 0;
+  font-size: 14px;
+  color: #991b1b;
+  word-break: break-word;
+}
+
+.errorSolutions {
+  margin: 24px 0;
+}
+
+.errorSolutions h3 {
+  color: #374151;
+  margin: 0 0 16px 0;
+  font-size: 18px;
+}
+
+.solutionButton {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.solutionButton.primary {
+  background: #10b981;
+  color: white;
+}
+
+.solutionButton.primary:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.solutionButton.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.solutionButton.secondary:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.manualInstructions {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 24px 0;
+}
+
+.manualInstructions h4 {
+  color: #374151;
+  margin: 0 0 12px 0;
+  font-size: 16px;
+}
+
+.manualInstructions ol {
+  color: #6b7280;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.manualInstructions li {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.manualInstructions strong {
+  color: #374151;
+}
+
+.errorFooter {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+  margin-top: 24px;
+}
+
+.errorFooter p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 14px;
+  text-align: center;
+}

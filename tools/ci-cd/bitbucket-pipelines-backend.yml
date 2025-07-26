@@ -1,0 +1,127 @@
+# This is a Bitbucket Pipeline configuration file.
+# It defines a CI/CD pipeline to automatically test, build, and deploy a Python application.
+# The application is containerized with Docker and deployed to Google Cloud Run.
+#
+# REQUIRED BITBUCKET REPOSITORY VARIABLES:
+# - GCP_PROJECT_ID: Your Google Cloud project ID.
+# - GCP_SA_KEY: A base64 encoded Google Cloud service account key (JSON).
+#   (To encode: `cat /path/to/key.json | base64 -w 0`)
+# - GAR_LOCATION: The region of your Google Artifact Registry (e.g., us-central1).
+# - CLOUD_RUN_SERVICE_NAME: The name of your service on Google Cloud Run.
+# - CLOUD_RUN_REGION: The region where your Cloud Run service is deployed (e.g., us-central1).
+
+# Define the Docker image to use for the pipeline steps.
+# The google/cloud-sdk image includes gcloud, docker, and other necessary tools.
+image: google/cloud-sdk:latest
+
+definitions:
+  services:
+    # Define the Docker-in-Docker service to be able to build Docker images inside the pipeline.
+    docker:
+      memory: 3072 # Allocate more memory to the Docker service if needed.
+  caches:
+    # Cache Docker layers to speed up subsequent builds.
+    # Cache pip packages to speed up dependency installation for tests.
+    pip: ~/.cache/pip
+
+pipelines:
+  default:
+    # This pipeline runs for all branches that don't have a specific pipeline defined.
+    # It's a good practice to run tests on every commit to any branch.
+    - step:
+        name: Lint and Test
+        image: python:3.10 # Use a specific python image for testing
+        condition:
+          changesets:
+            includePaths:
+              - "deltaverse-api/**"
+        caches:
+          - pip
+        script:
+          # Install project dependencies. Using pip for simplicity in this step.
+          # If using Poetry:
+          # - pip install poetry
+          # - poetry install
+          # Change directory to the project folder before running commands.
+          - cd deltaverse-api
+          - pip install -r requirements.txt
+          - pip install pytest httpx black
+          # Run the linter. The --check flag makes black fail if files need reformatting.
+          #- black --check .
+          # Run the tests using pytest.
+          #- pytest
+
+  branches:
+    main:
+      # This pipeline runs automatically on every commit to the 'main' branch.
+      # It consists of three sequential steps: Test, Build & Push, and Deploy.
+      - step:
+          name: Lint and Test
+          image: python:3.10
+          condition:
+            changesets:
+              includePaths:
+                - "deltaverse-api/**"
+          caches:
+            - pip
+          script:
+            # Change directory to the project folder before running commands.
+            - cd deltaverse-api
+            - pip install -r requirements.txt
+            - pip install pytest httpx black
+            #- black --check .
+            #- pytest
+      - step:
+          name: Build and Push to Google Artifact Registry
+          condition:
+            changesets:
+              includePaths:
+                - "deltaverse-api/**"
+          services:
+            - docker
+          caches:
+            - docker
+          script:
+            # --- Validate required variables ---
+            - |
+              if [ -z "$GCP_PROJECT_ID" ]; then echo "ERROR: GCP_PROJECT_ID is not set in Repository variables." >&2; exit 1; fi
+              if [ -z "$GCP_SA_KEY" ]; then echo "ERROR: GCP_SA_KEY is not set in Repository variables." >&2; exit 1; fi
+              if [ -z "$GAR_LOCATION" ]; then echo "ERROR: GAR_LOCATION is not set in Repository variables." >&2; exit 1; fi
+              if [ -z "$CLOUD_RUN_SERVICE_NAME" ]; then echo "ERROR: CLOUD_RUN_SERVICE_NAME is not set in Repository variables." >&2; exit 1; fi
+            # --- Authenticate with Google Cloud ---
+            - echo $GCP_SA_KEY | base64 -d > /tmp/gcp-key.json
+            - gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+            - gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+
+            # --- Build and Push the Docker Image using Buildx ---
+            - export IMAGE_TAG=${BITBUCKET_COMMIT}
+            - export IMAGE_NAME="${GAR_LOCATION}-docker.pkg.dev/${GCP_PROJECT_ID}/${CLOUD_RUN_SERVICE_NAME}/${CLOUD_RUN_SERVICE_NAME}:${IMAGE_TAG}"
+            # Enable the experimental Docker CLI features to use Buildx
+            # Reverting to legacy docker build and push due to old buildx version in the base image
+            - docker build -t $IMAGE_NAME -f deltaverse-api/Dockerfile deltaverse-api
+            - docker push $IMAGE_NAME
+      - step:
+          name: Deploy to Google Cloud Run
+          # This keyword tells Bitbucket that this step is a deployment to the 'production' environment.
+          # This resolves the error and allows Bitbucket to track your deployments.
+          deployment: production
+          condition:
+            changesets:
+              includePaths:
+                - "deltaverse-api/**"
+          # This step is triggered automatically after the "Build and Push" step succeeds.
+          # For production, you might want to make this a manual trigger: `trigger: manual`
+          script:
+            # --- Authenticate with Google Cloud (required in each step) ---
+            - echo $GCP_SA_KEY | base64 -d > /tmp/gcp-key.json
+            - gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+
+            # --- Deploy the Image ---
+            # Reconstruct the image name using the same commit hash tag.
+            - export IMAGE_TAG=${BITBUCKET_COMMIT}
+            - export IMAGE_NAME="${GAR_LOCATION}-docker.pkg.dev/${GCP_PROJECT_ID}/${CLOUD_RUN_SERVICE_NAME}/${CLOUD_RUN_SERVICE_NAME}:${IMAGE_TAG}"
+            # Deploy the new image to Google Cloud Run.
+            # --platform managed: Specifies the fully managed Cloud Run environment.
+            # --allow-unauthenticated: Makes the service publicly accessible. Remove this flag for internal services.
+            # --region: Specifies the deployment region.
+            - gcloud run deploy $CLOUD_RUN_SERVICE_NAME --image $IMAGE_NAME --project=$GCP_PROJECT_ID --platform managed --region $CLOUD_RUN_REGION --allow-unauthenticated --memory 2Gi --cpu 2 --max-instances 10 --set-env-vars="FIREBASE_PROJECT_ID=$GCP_PROJECT_ID,ENVIRONMENT=production,VERTEX_AI_PROJECT_ID=$GCP_PROJECT_ID,VERTEX_AI_LOCATION=$CLOUD_RUN_REGION,GOOGLE_APPLICATION_CREDENTIALS=credentials/vertexai_connect_creds.json,GEMINI_MODEL_NAME=${GEMINI_MODEL_NAME:-gemini-1.5-pro},GEMINI_TEMPERATURE=${GEMINI_TEMPERATURE:-0.3},GEMINI_MAX_TOKENS=${GEMINI_MAX_TOKENS:-8192},GEMINI_TOP_P=${GEMINI_TOP_P:-0.8},GEMINI_TOP_K=${GEMINI_TOP_K:-40},FI_MONEY_MCP_SERVER_URL=${FI_MONEY_MCP_SERVER_URL:-https://fi.money/mcp}"

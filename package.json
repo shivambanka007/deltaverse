@@ -1,0 +1,36 @@
+{
+  "name": "deltaverse",
+  "version": "1.0.0",
+  "description": "DeltaVerse Financial Advisory Platform - API Testing Suite",
+  "main": "index.js",
+  "scripts": {
+    "test:api": "node run_api_tests.js development",
+    "test:api:prod": "node run_api_tests.js production",
+    "test:postman": "newman run DeltaVerse_API_Collection.postman_collection.json -e DeltaVerse_Development.postman_environment.json",
+    "install:newman": "npm install -g newman",
+    "start:backend": "cd deltaverse-api && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "start:frontend": "cd deltaverse-ui && npm start",
+    "start:fi-mcp": "cd fi-mcp-dev-master && go run main.go"
+  },
+  "keywords": [
+    "fintech",
+    "api-testing",
+    "postman",
+    "newman",
+    "financial-health",
+    "ai-advisor",
+    "fi-mcp",
+    "hackathon"
+  ],
+  "author": "DeltaVerse Team",
+  "license": "ISC",
+  "dependencies": {
+    "firebase-admin": "^13.4.0"
+  },
+  "devDependencies": {
+    "newman": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

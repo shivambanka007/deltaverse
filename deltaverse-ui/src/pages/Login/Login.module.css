@@ -1,0 +1,403 @@
+/* Industry Standard Login Page */
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem;
+  position: relative;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  margin-bottom: 1.5rem;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+}
+
+.header p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Error */
+.error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Content */
+.content {
+  margin-bottom: 2rem;
+}
+
+/* Auth Selection */
+.authSelection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.authOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.authOption {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.authOption:hover:not(:disabled) {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.authOption:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.authIcon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border-radius: 8px;
+  color: #4b5563;
+}
+
+.authContent {
+  flex: 1;
+}
+
+.authContent h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+}
+
+.authContent p {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.authArrow {
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+/* Sign Up Prompt */
+.signUpPrompt {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.signUpPrompt p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.signUpLink {
+  color: #4f46e5;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.signUpLink:hover {
+  color: #3730a3;
+}
+
+/* Auth Form */
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.backButton {
+  align-self: flex-start;
+}
+
+.backButton button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.backButton button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.formHeader {
+  text-align: center;
+}
+
+.formHeader h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+}
+
+.formHeader p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Google Button */
+.googleButton {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.googleButton:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.googleButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.footer p {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.footer a {
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* Loading */
+.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border-radius: 12px;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading span {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .card {
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+  
+  .header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .authOption {
+    padding: 0.75rem;
+  }
+  
+  .authIcon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background: #1f2937;
+    border: 1px solid #374151;
+  }
+  
+  .header h1 {
+    color: #f9fafb;
+  }
+  
+  .header p {
+    color: #d1d5db;
+  }
+  
+  .authOption {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .authOption:hover:not(:disabled) {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  
+  .authIcon {
+    background: #4b5563;
+    color: #d1d5db;
+  }
+  
+  .authContent h3 {
+    color: #f9fafb;
+  }
+  
+  .authContent p {
+    color: #9ca3af;
+  }
+  
+  .signUpPrompt {
+    border-top-color: #374151;
+  }
+  
+  .signUpPrompt p {
+    color: #9ca3af;
+  }
+  
+  .backButton button {
+    color: #9ca3af;
+  }
+  
+  .backButton button:hover {
+    background: #374151;
+    color: #d1d5db;
+  }
+  
+  .formHeader h2 {
+    color: #f9fafb;
+  }
+  
+  .formHeader p {
+    color: #9ca3af;
+  }
+  
+  .googleButton {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+  
+  .googleButton:hover:not(:disabled) {
+    background: #4b5563;
+  }
+  
+  .footer {
+    border-top-color: #374151;
+  }
+  
+  .footer p {
+    color: #9ca3af;
+  }
+  
+  .loading {
+    background: rgba(31, 41, 55, 0.9);
+  }
+}

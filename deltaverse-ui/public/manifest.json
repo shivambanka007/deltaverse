@@ -1,0 +1,19 @@
+{
+  "short_name": "DeltaVerse AI",
+  "name": "DeltaVerse - AI Finance Advisor",
+  "description": "Your intelligent financial advisor powered by AI. Get personalized financial advice, investment recommendations, and smart financial planning.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#4F46E5",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "productivity", "business"],
+  "lang": "en-US"
+}

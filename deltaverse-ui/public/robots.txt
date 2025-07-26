@@ -1,0 +1,16 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /profile/
+Disallow: /settings/
+
+# Allow access to public pages
+Allow: /
+Allow: /login
+Allow: /about
+Allow: /contact
+
+# Sitemap location
+Sitemap: https://yourdomain.com/sitemap.xml

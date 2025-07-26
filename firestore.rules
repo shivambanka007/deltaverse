@@ -1,0 +1,92 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidUser(userData) {
+      return userData.keys().hasAll(['uid', 'createdAt']) &&
+             userData.uid == request.auth.uid;
+    }
+    
+    function isValidFinancialData(data) {
+      return data.keys().hasAll(['userId']) &&
+             data.userId == request.auth.uid;
+    }
+    
+    // Users collection - users can only access their own profile
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      allow create: if isAuthenticated() && 
+                       userId == request.auth.uid &&
+                       isValidUser(request.resource.data);
+    }
+    
+    // Financial data collection - user-specific financial information
+    match /financial_data/{userId} {
+      allow read, write: if isOwner(userId);
+      allow create: if isAuthenticated() && 
+                       userId == request.auth.uid &&
+                       isValidFinancialData(request.resource.data);
+    }
+    
+    // Transactions collection - user-specific transactions
+    match /transactions/{transactionId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Financial goals collection - user-specific goals
+    match /financial_goals/{goalId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.userId;
+    }
+    
+    // AI recommendations collection - user-specific AI insights
+    match /ai_recommendations/{recommendationId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Market data collection - public read-only data
+    match /market_data/{document} {
+      allow read: if true;
+      allow write: if false; // Only admin/backend can write market data
+    }
+    
+    // App configuration - public read-only
+    match /app_config/{document} {
+      allow read: if true;
+      allow write: if false; // Only admin can modify app config
+    }
+    
+    // User sessions - for tracking active sessions
+    match /user_sessions/{sessionId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Analytics events - user can write their own events
+    match /analytics_events/{eventId} {
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.userId;
+      allow read: if false; // Analytics are write-only for users
+    }
+  }
+}

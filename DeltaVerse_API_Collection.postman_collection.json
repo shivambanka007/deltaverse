@@ -1,0 +1,821 @@
+{
+  "info": {
+    "name": "DeltaVerse API Collection",
+    "description": "Comprehensive API collection for DeltaVerse Financial Advisory Platform\n\n## Features:\n- 💰 Fi Money MCP Integration\n- 🤖 AI-Powered Financial Advisory\n- 📊 Financial Health Scoring\n- 💡 Smart Insights & Recommendations\n- 🔐 Firebase Authentication\n\n## Quick Start:\n1. Set environment variables (base_url, firebase_token)\n2. Test Fi-MCP connection\n3. Authenticate with Fi Money\n4. Get financial health score\n5. Chat with AI advisor",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "deltaverse-api-collection",
+    "updatedAt": "2025-07-25T14:00:00.000Z"
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "description": "Firebase and Fi Money authentication endpoints",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the API server is running"
+          },
+          "response": []
+        },
+        {
+          "name": "Fi-MCP Server Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/fi-mcp-status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "fi-mcp-status"]
+            },
+            "description": "Check Fi-MCP server connection status"
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate Fi Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenario_phone\": \"2222222222\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/fi/login/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "fi", "login", "initiate"]
+            },
+            "description": "Initiate Fi Money login process\n\nTest Scenarios:\n- 1111111111: No assets connected\n- 2222222222: All assets connected (recommended)\n- 7777777777: Debt-heavy low performer\n- 8888888888: SIP Samurai\n- 1616161616: Early retirement dreamer"
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Fi Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"session_id\": \"{{fi_session_id}}\",\n  \"phone_number\": \"2222222222\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/fi/login/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "fi", "login", "complete"]
+            },
+            "description": "Complete Fi Money authentication after user login"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📊 Financial Health",
+      "description": "Financial health scoring and analysis endpoints",
+      "item": [
+        {
+          "name": "Get Financial Health Score",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/score?phone_number=2222222222",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "score"],
+              "query": [
+                {
+                  "key": "phone_number",
+                  "value": "2222222222",
+                  "description": "Test scenario phone number"
+                }
+              ]
+            },
+            "description": "Get comprehensive financial health score with components and recommendations"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Mock Financial Health Score",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/mock-score?phone_number=2222222222",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "mock-score"],
+              "query": [
+                {
+                  "key": "phone_number",
+                  "value": "2222222222"
+                }
+              ]
+            },
+            "description": "Get mock financial health score for testing without Fi-MCP connection"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Scenarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/scenarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "scenarios"]
+            },
+            "description": "Get list of available test scenarios for development"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Financial Health History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/history?limit=30",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "30"
+                }
+              ]
+            },
+            "description": "Get user's financial health calculation history"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Historical Scores",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/historical-scores?days=90",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "historical-scores"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "90"
+                }
+              ]
+            },
+            "description": "Get historical financial health scores for charting"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User Financial Data",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/user-data",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "user-data"]
+            },
+            "description": "Delete all user financial data (GDPR compliance)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🤖 AI Chat",
+      "description": "AI-powered financial advisory chat endpoints",
+      "item": [
+        {
+          "name": "Send Chat Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"How is my financial health?\",\n  \"conversation_id\": null,\n  \"use_fi_data\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/message",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "message"]
+            },
+            "description": "Send a message to the AI financial advisor"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Proactive Insights",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/insights?use_fi_data=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "insights"],
+              "query": [
+                {
+                  "key": "use_fi_data",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Get proactive financial insights based on user data"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Financial Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/financial-summary?use_fi_data=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "financial-summary"],
+              "query": [
+                {
+                  "key": "use_fi_data",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Get comprehensive financial summary for the user"
+          },
+          "response": []
+        },
+        {
+          "name": "Simulate Financial Scenario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenario_type\": \"home_loan\",\n  \"parameters\": {\n    \"loan_amount\": 5000000,\n    \"interest_rate\": 8.5,\n    \"tenure_years\": 20,\n    \"down_payment\": 1000000\n  },\n  \"description\": \"Simulate home loan impact on financial health\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/simulate-scenario",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", "simulate-scenario"]
+            },
+            "description": "Simulate financial scenarios and their impact"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💰 Financial Data",
+      "description": "Financial data management endpoints",
+      "item": [
+        {
+          "name": "Get Net Worth",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial/net-worth/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial", "net-worth", "{{user_id}}"]
+            },
+            "description": "Get user's net worth data"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Mutual Fund Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial/mutual-funds/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial", "mutual-funds", "{{user_id}}"]
+            },
+            "description": "Get user's mutual fund portfolio"
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Financial Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial/sync/2222222222",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial", "sync", "2222222222"]
+            },
+            "description": "Sync financial data from Fi-MCP server"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sync Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial/sync/2222222222/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial", "sync", "2222222222", "status"]
+            },
+            "description": "Get sync status for a user"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔧 Fi-MCP Integration",
+      "description": "Direct Fi-MCP server integration endpoints",
+      "item": [
+        {
+          "name": "Fi-MCP Tools List",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/list\",\n  \"params\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{fi_mcp_url}}/mcp/stream",
+              "host": ["{{fi_mcp_url}}"],
+              "path": ["mcp", "stream"]
+            },
+            "description": "Get list of available Fi-MCP tools"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch Net Worth",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"fetch_net_worth\",\n    \"arguments\": {\n      \"phone_number\": \"2222222222\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{fi_mcp_url}}/mcp/stream",
+              "host": ["{{fi_mcp_url}}"],
+              "path": ["mcp", "stream"]
+            },
+            "description": "Fetch net worth data from Fi-MCP"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch Credit Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"fetch_credit_report\",\n    \"arguments\": {\n      \"phone_number\": \"2222222222\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{fi_mcp_url}}/mcp/stream",
+              "host": ["{{fi_mcp_url}}"],
+              "path": ["mcp", "stream"]
+            },
+            "description": "Fetch credit report from Fi-MCP"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch Bank Transactions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"fetch_bank_transactions\",\n    \"arguments\": {\n      \"phone_number\": \"2222222222\",\n      \"months\": 6\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{fi_mcp_url}}/mcp/stream",
+              "host": ["{{fi_mcp_url}}"],
+              "path": ["mcp", "stream"]
+            },
+            "description": "Fetch bank transactions from Fi-MCP"
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch Mutual Fund Transactions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"fetch_mf_transactions\",\n    \"arguments\": {\n      \"phone_number\": \"2222222222\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{fi_mcp_url}}/mcp/stream",
+              "host": ["{{fi_mcp_url}}"],
+              "path": ["mcp", "stream"]
+            },
+            "description": "Fetch mutual fund transactions from Fi-MCP"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🧪 Test Scenarios",
+      "description": "Pre-configured test scenarios for development",
+      "item": [
+        {
+          "name": "Test Scenario: All Assets Connected",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/score?phone_number=2222222222",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "score"],
+              "query": [
+                {
+                  "key": "phone_number",
+                  "value": "2222222222"
+                }
+              ]
+            },
+            "description": "Test with user who has all assets connected (Score: ~75)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Scenario: No Assets Connected",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/score?phone_number=1111111111",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "score"],
+              "query": [
+                {
+                  "key": "phone_number",
+                  "value": "1111111111"
+                }
+              ]
+            },
+            "description": "Test with user who has no assets connected (Score: ~45)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Scenario: Debt-Heavy Low Performer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/score?phone_number=7777777777",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "score"],
+              "query": [
+                {
+                  "key": "phone_number",
+                  "value": "7777777777"
+                }
+              ]
+            },
+            "description": "Test with debt-heavy user with poor performance (Score: ~35)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Scenario: SIP Samurai",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/score?phone_number=8888888888",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "score"],
+              "query": [
+                {
+                  "key": "phone_number",
+                  "value": "8888888888"
+                }
+              ]
+            },
+            "description": "Test with consistent SIP investor (Score: ~70)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Scenario: Early Retirement Dreamer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebase_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/financial-health/score?phone_number=1616161616",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "financial-health", "score"],
+              "query": [
+                {
+                  "key": "phone_number",
+                  "value": "1616161616"
+                }
+              ]
+            },
+            "description": "Test with high-performing early retirement focused user (Score: ~85)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set timestamp for requests",
+          "pm.globals.set('timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script for all requests",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response has valid JSON', function () {",
+          "    pm.response.to.have.jsonBody();",
+          "});",
+          "",
+          "// Auto-extract session_id from Fi login responses",
+          "if (pm.response.json() && pm.response.json().session_id) {",
+          "    pm.globals.set('fi_session_id', pm.response.json().session_id);",
+          "    console.log('Extracted session_id:', pm.response.json().session_id);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "description": "Base URL for DeltaVerse API"
+    },
+    {
+      "key": "fi_mcp_url",
+      "value": "http://localhost:8080",
+      "description": "Fi-MCP server URL"
+    },
+    {
+      "key": "firebase_token",
+      "value": "your-firebase-jwt-token-here",
+      "description": "Firebase JWT token for authentication"
+    },
+    {
+      "key": "user_id",
+      "value": "dev_user_123",
+      "description": "User ID for testing"
+    },
+    {
+      "key": "fi_session_id",
+      "value": "",
+      "description": "Fi-MCP session ID (auto-populated)"
+    }
+  ]
+}

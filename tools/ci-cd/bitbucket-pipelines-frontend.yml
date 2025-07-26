@@ -1,0 +1,118 @@
+# DeltaVerse Frontend Deployment Pipeline
+# Deploys React frontend to Firebase Hosting
+#
+# REQUIRED BITBUCKET REPOSITORY VARIABLES:
+# - FIREBASE_TOKEN: Firebase CLI token for deployment
+# - REACT_APP_API_URL: Backend API URL (from Cloud Run deployment)
+
+image: node:18
+
+definitions:
+  caches:
+    node: node_modules
+
+pipelines:
+  default:
+    # Run frontend tests on all branches
+    - step:
+        name: Frontend Tests
+        condition:
+          changesets:
+            includePaths:
+              - "deltaverse-ui/**"
+        caches:
+          - node
+        script:
+          - cd deltaverse-ui
+          - npm ci
+          - npm run test -- --coverage --watchAll=false
+          - npm run build
+
+  branches:
+    main:
+      # Production frontend deployment
+      - step:
+          name: Frontend Tests
+          condition:
+            changesets:
+              includePaths:
+                - "deltaverse-ui/**"
+          caches:
+            - node
+          script:
+            - cd deltaverse-ui
+            - npm ci
+            - npm run test -- --coverage --watchAll=false
+
+      - step:
+          name: Build and Deploy Frontend to Firebase
+          deployment: production
+          condition:
+            changesets:
+              includePaths:
+                - "deltaverse-ui/**"
+          caches:
+            - node
+          script:
+            # Install dependencies and build frontend
+            - cd deltaverse-ui
+            - npm ci
+
+            # Build with production environment variables
+            - |
+              REACT_APP_API_URL=${REACT_APP_API_URL:-"https://your-backend-url.run.app"} \
+              REACT_APP_FIREBASE_API_KEY=AIzaSyDF_Jf5DTCH7GE4j6vyScuvTkOb7GnOW1o \
+              REACT_APP_FIREBASE_AUTH_DOMAIN=$GCP_PROJECT_ID.firebaseapp.com \
+              REACT_APP_FIREBASE_PROJECT_ID=$GCP_PROJECT_ID \
+              REACT_APP_FIREBASE_STORAGE_BUCKET=$GCP_PROJECT_ID.firebasestorage.app \
+              REACT_APP_FIREBASE_MESSAGING_SENDER_ID=1029461078184 \
+              REACT_APP_FIREBASE_APP_ID=1:1029461078184:web:8762ad6bc8fa3e6edfd29d \
+              REACT_APP_FIREBASE_MEASUREMENT_ID=G-C3LCZ6L5FB \
+              REACT_APP_ENVIRONMENT=production \
+              npm run build
+
+            # Go back to root directory for Firebase deployment
+            - cd ..
+
+            # Install Firebase CLI and deploy
+            - npm install -g firebase-tools
+            - echo "Setting up service account authentication..."
+            - echo $GCP_SA_KEY | base64 -d > /tmp/gcp-key.json
+            - export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json
+            - gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+            - gcloud config set project $GCP_PROJECT_ID
+            - firebase use $GCP_PROJECT_ID
+            - firebase deploy --only hosting --project $GCP_PROJECT_ID
+            - echo "Frontend deployed to https://$GCP_PROJECT_ID.web.app"
+
+    develop:
+      # Staging frontend deployment
+      - step:
+          name: Deploy Frontend to Staging
+          deployment: staging
+          condition:
+            changesets:
+              includePaths:
+                - "deltaverse-ui/**"
+          caches:
+            - node
+          script:
+            - echo "Frontend staging deployment would go here"
+            - echo "Could deploy to different Firebase project"
+
+  pull-requests:
+    '**':
+      # Run frontend tests on all pull requests
+      - step:
+          name: PR Tests - Frontend
+          condition:
+            changesets:
+              includePaths:
+                - "deltaverse-ui/**"
+          caches:
+            - node
+          script:
+            - cd deltaverse-ui
+            - npm ci
+            - npm run test -- --coverage --watchAll=false
+            - npm run build
