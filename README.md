@@ -1,4 +1,4 @@
-# DeltaVerse - Agentic AI Code Collaboration
+# DeltaVerse - Let AI Speak to your money (Agentic AI Code Collaboration)
 
 DeltaVerse is a comprehensive financial AI platform that combines agentic AI capabilities with real-time financial data integration. The platform features a React-based frontend, FastAPI backend, and a Go-based MCP (Model Context Protocol) server for financial data simulation.
 
