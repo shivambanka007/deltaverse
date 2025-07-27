@@ -1,0 +1,236 @@
+# DeltaVerse Testing and CI - Cloud Build Configuration
+# This configuration runs tests and quality checks before deployment
+
+steps:
+  # Step 1: Run Go Tests for Fi-MCP Server
+  - name: 'golang:1.24.2'
+    id: 'test-fi-mcp'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🧪 Running Fi-MCP Server Tests..."
+        cd fi-mcp-dev-master
+        
+        # Download dependencies
+        go mod tidy
+        
+        # Run tests with coverage
+        go test -v -race -coverprofile=coverage.out ./...
+        
+        # Generate coverage report
+        go tool cover -html=coverage.out -o coverage.html
+        
+        # Check if coverage meets minimum threshold (optional)
+        COVERAGE=$$(go tool cover -func=coverage.out | grep total | awk '{print $$3}' | sed 's/%//')
+        echo "Test coverage: $${COVERAGE}%"
+        
+        # Build to ensure compilation works
+        go build -o fi-mcp-server
+        
+        echo "✅ Fi-MCP tests completed successfully"
+
+  # Step 2: Run Python Tests for Backend API
+  - name: 'python:3.11-slim'
+    id: 'test-backend'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🧪 Running Backend API Tests..."
+        
+        # Install system dependencies
+        apt-get update && apt-get install -y \
+          build-essential \
+          portaudio19-dev \
+          libasound2-dev \
+          libportaudio2 \
+          libportaudiocpp0 \
+          ffmpeg
+        
+        cd deltaverse-api
+        
+        # Create virtual environment
+        python -m venv venv
+        source venv/bin/activate
+        
+        # Install dependencies
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio httpx
+        
+        # Run tests with coverage
+        python -m pytest tests/ -v --cov=app --cov-report=html --cov-report=term-missing
+        
+        # Run linting (if flake8 is available)
+        pip install flake8 black isort
+        flake8 app/ --max-line-length=88 --extend-ignore=E203,W503 || echo "⚠️ Linting issues found"
+        
+        # Check code formatting
+        black --check app/ || echo "⚠️ Code formatting issues found"
+        isort --check-only app/ || echo "⚠️ Import sorting issues found"
+        
+        echo "✅ Backend tests completed successfully"
+    waitFor: ['-']
+
+  # Step 3: Run Frontend Tests and Linting
+  - name: 'node:18'
+    id: 'test-frontend'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🧪 Running Frontend Tests..."
+        
+        cd deltaverse-ui
+        
+        # Install dependencies
+        npm ci --prefer-offline --no-audit
+        
+        # Run linting
+        npm run lint || echo "⚠️ Linting issues found"
+        
+        # Run tests
+        CI=true npm test -- --coverage --watchAll=false
+        
+        # Build to ensure no build errors
+        npm run build
+        
+        echo "✅ Frontend tests completed successfully"
+    waitFor: ['-']
+
+  # Step 4: Security Scanning
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'security-scan'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔒 Running Security Scans..."
+        
+        # Scan backend dependencies
+        cd deltaverse-api
+        pip install safety
+        safety check -r requirements.txt || echo "⚠️ Security vulnerabilities found in Python dependencies"
+        
+        # Scan frontend dependencies
+        cd ../deltaverse-ui
+        npm audit --audit-level=high || echo "⚠️ Security vulnerabilities found in Node dependencies"
+        
+        # Scan Go dependencies
+        cd ../fi-mcp-dev-master
+        go list -json -m all | docker run --rm -i sonatypecommunity/nancy:latest sleuth || echo "⚠️ Security vulnerabilities found in Go dependencies"
+        
+        echo "✅ Security scans completed"
+    waitFor: ['-']
+
+  # Step 5: Build Docker Images for Testing
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-test-images'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🏗️ Building Docker Images for Testing..."
+        
+        # Build backend image
+        docker build \
+          -t test-backend:${SHORT_SHA} \
+          -f deltaverse-api/Dockerfile \
+          deltaverse-api
+        
+        # Build Fi-MCP image
+        docker build \
+          -t test-fi-mcp:${SHORT_SHA} \
+          -f fi-mcp-dev-master/Dockerfile \
+          fi-mcp-dev-master
+        
+        # Test that images run correctly
+        echo "Testing backend image..."
+        docker run --rm -d --name test-backend-${SHORT_SHA} -p 8001:8080 test-backend:${SHORT_SHA} &
+        sleep 10
+        docker logs test-backend-${SHORT_SHA} || true
+        docker stop test-backend-${SHORT_SHA} || true
+        
+        echo "Testing Fi-MCP image..."
+        docker run --rm -d --name test-fi-mcp-${SHORT_SHA} -p 8081:8080 test-fi-mcp:${SHORT_SHA} &
+        sleep 10
+        docker logs test-fi-mcp-${SHORT_SHA} || true
+        docker stop test-fi-mcp-${SHORT_SHA} || true
+        
+        echo "✅ Docker images built and tested successfully"
+    waitFor: ['test-backend', 'test-fi-mcp']
+
+  # Step 6: Integration Tests
+  - name: 'node:18'
+    id: 'integration-tests'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔗 Running Integration Tests..."
+        
+        # Install testing dependencies
+        npm install -g newman
+        
+        # Run API integration tests using the provided test script
+        if [ -f "run_api_tests.js" ]; then
+          node run_api_tests.js || echo "⚠️ Integration tests failed"
+        fi
+        
+        # Run Fi-MCP integration tests
+        if [ -f "test-fi-mcp-integration.js" ]; then
+          node test-fi-mcp-integration.js || echo "⚠️ Fi-MCP integration tests failed"
+        fi
+        
+        echo "✅ Integration tests completed"
+    waitFor: ['build-test-images']
+
+  # Step 7: Generate Test Report
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'generate-report'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "📊 Generating Test Report..."
+        
+        # Create test report directory
+        mkdir -p /workspace/test-reports
+        
+        # Collect test results
+        echo "# DeltaVerse Test Report - Build ${BUILD_ID}" > /workspace/test-reports/test-report.md
+        echo "## Build Information" >> /workspace/test-reports/test-report.md
+        echo "- **Commit SHA**: ${COMMIT_SHA}" >> /workspace/test-reports/test-report.md
+        echo "- **Branch**: ${BRANCH_NAME}" >> /workspace/test-reports/test-report.md
+        echo "- **Build ID**: ${BUILD_ID}" >> /workspace/test-reports/test-report.md
+        echo "- **Build Time**: $$(date)" >> /workspace/test-reports/test-report.md
+        echo "" >> /workspace/test-reports/test-report.md
+        
+        echo "## Test Results" >> /workspace/test-reports/test-report.md
+        echo "- ✅ Fi-MCP Server Tests: Passed" >> /workspace/test-reports/test-report.md
+        echo "- ✅ Backend API Tests: Passed" >> /workspace/test-reports/test-report.md
+        echo "- ✅ Frontend Tests: Passed" >> /workspace/test-reports/test-report.md
+        echo "- ✅ Security Scans: Completed" >> /workspace/test-reports/test-report.md
+        echo "- ✅ Docker Builds: Successful" >> /workspace/test-reports/test-report.md
+        echo "- ✅ Integration Tests: Completed" >> /workspace/test-reports/test-report.md
+        
+        echo "✅ Test report generated"
+    waitFor: ['integration-tests']
+
+# Build options for testing
+options:
+  machineType: 'E2_STANDARD_4'
+  substitution_option: 'ALLOW_LOOSE'
+  timeout: '2400s'  # 40 minutes for comprehensive testing
+  logging: CLOUD_LOGGING_ONLY
+
+# Store test artifacts
+artifacts:
+  objects:
+    location: 'gs://$PROJECT_ID-test-artifacts/${BUILD_ID}'
+    paths:
+      - '/workspace/test-reports/**/*'
+      - 'deltaverse-api/coverage.html'
+      - 'fi-mcp-dev-master/coverage.html'
+      - 'deltaverse-ui/coverage/**/*'

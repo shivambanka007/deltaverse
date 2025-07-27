@@ -1,0 +1,153 @@
+# DeltaVerse Development Environment - Cloud Build Configuration
+# This configuration deploys to development environment with different settings
+
+steps:
+  # Step 1: Deploy Fi-MCP Mock Server (Development)
+  - name: 'golang:1.24.2'
+    id: 'deploy-fi-mcp-dev'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🚀 Deploying Fi-MCP Mock Server (Development)..."
+        
+        # Install gcloud SDK
+        echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+        curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+        apt-get update && apt-get install -y google-cloud-sdk
+        
+        # Build Fi-MCP server
+        cd fi-mcp-dev-master
+        go mod tidy
+        go build -o fi-mcp-server
+        
+        # Deploy to Cloud Run with dev suffix
+        gcloud run deploy fi-mcp-dev-${SHORT_SHA} \
+          --source . \
+          --platform managed \
+          --region $_CLOUD_RUN_REGION \
+          --allow-unauthenticated \
+          --port 8080 \
+          --set-env-vars="FI_MCP_PORT=8080,ENVIRONMENT=development" \
+          --memory 256Mi \
+          --cpu 0.5 \
+          --max-instances 1 \
+          --project $PROJECT_ID
+        
+        # Get the deployed URL and save it
+        FI_MCP_URL=$$(gcloud run services describe fi-mcp-dev-${SHORT_SHA} --region=$_CLOUD_RUN_REGION --format='value(status.url)' --project $PROJECT_ID)
+        echo "FI_MCP_URL=$${FI_MCP_URL}" > /workspace/fi-mcp-url.env
+        echo "✅ Fi-MCP (Dev) deployed at $${FI_MCP_URL}"
+
+  # Step 2: Build and Deploy Backend (Development)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-deploy-backend-dev'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🏗️ Building and Deploying Backend (Development)..."
+        
+        # Build Docker image
+        docker build \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          -t ${_GAR_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_CLOUD_RUN_SERVICE_NAME}/${_CLOUD_RUN_SERVICE_NAME}-dev:${SHORT_SHA} \
+          -f deltaverse-api/Dockerfile \
+          deltaverse-api
+        
+        # Push to Artifact Registry
+        docker push ${_GAR_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_CLOUD_RUN_SERVICE_NAME}/${_CLOUD_RUN_SERVICE_NAME}-dev:${SHORT_SHA}
+        
+        # Load Fi-MCP URL
+        source /workspace/fi-mcp-url.env
+        
+        # Deploy to Cloud Run
+        gcloud run deploy ${_CLOUD_RUN_SERVICE_NAME}-dev-${SHORT_SHA} \
+          --image ${_GAR_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_CLOUD_RUN_SERVICE_NAME}/${_CLOUD_RUN_SERVICE_NAME}-dev:${SHORT_SHA} \
+          --project=$PROJECT_ID \
+          --platform managed \
+          --region $_CLOUD_RUN_REGION \
+          --allow-unauthenticated \
+          --memory 1Gi \
+          --cpu 1 \
+          --timeout 300 \
+          --port 8080 \
+          --max-instances 1 \
+          --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,FIREBASE_PROJECT_ID=$PROJECT_ID,ENVIRONMENT=development,DEVELOPMENT_MODE=true,DEBUG=true,FI_MCP_URL=$${FI_MCP_URL}"
+        
+        # Get backend URL and save it
+        BACKEND_URL=$$(gcloud run services describe ${_CLOUD_RUN_SERVICE_NAME}-dev-${SHORT_SHA} --region=$_CLOUD_RUN_REGION --format='value(status.url)' --project $PROJECT_ID)
+        echo "BACKEND_URL=$${BACKEND_URL}" > /workspace/backend-url.env
+        echo "FI_MCP_URL=$${FI_MCP_URL}" >> /workspace/backend-url.env
+        echo "✅ Backend (Dev) deployed at $${BACKEND_URL}"
+    waitFor: ['deploy-fi-mcp-dev']
+
+  # Step 3: Build and Deploy Frontend (Development)
+  - name: 'node:18'
+    id: 'build-deploy-frontend-dev'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🏗️ Building and Deploying Frontend (Development)..."
+        
+        # Load URLs
+        source /workspace/backend-url.env
+        
+        # Navigate to frontend directory
+        cd deltaverse-ui
+        
+        # Install dependencies
+        npm ci --prefer-offline --no-audit
+        
+        # Set development environment variables
+        export CI=false
+        export REACT_APP_API_URL=$${BACKEND_URL}
+        export REACT_APP_FI_MCP_URL=$${FI_MCP_URL}
+        export REACT_APP_FIREBASE_API_KEY=${_FIREBASE_API_KEY}
+        export REACT_APP_FIREBASE_AUTH_DOMAIN=$PROJECT_ID.firebaseapp.com
+        export REACT_APP_FIREBASE_PROJECT_ID=$PROJECT_ID
+        export REACT_APP_FIREBASE_STORAGE_BUCKET=$PROJECT_ID.firebasestorage.app
+        export REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${_FIREBASE_MESSAGING_SENDER_ID}
+        export REACT_APP_FIREBASE_APP_ID=${_FIREBASE_APP_ID}
+        export REACT_APP_FIREBASE_MEASUREMENT_ID=${_FIREBASE_MEASUREMENT_ID}
+        export REACT_APP_ENVIRONMENT=development
+        export REACT_APP_DEBUG=true
+        export REACT_APP_USE_REAL_API=true
+        export REACT_APP_ENABLE_ANALYTICS=false
+        
+        # Build the application
+        npm run build
+        
+        # Install Firebase CLI and deploy to development channel
+        npm install -g firebase-tools
+        
+        # Authenticate with Firebase
+        gcloud auth print-access-token > /tmp/firebase-token.txt
+        export FIREBASE_TOKEN=$$(cat /tmp/firebase-token.txt)
+        
+        # Set Firebase project
+        firebase use $PROJECT_ID --token $$FIREBASE_TOKEN
+        
+        # Deploy to preview channel
+        firebase hosting:channel:deploy dev-${SHORT_SHA} --project $PROJECT_ID --token $$FIREBASE_TOKEN
+        
+        echo "✅ Frontend (Dev) deployed to preview channel: dev-${SHORT_SHA}"
+    waitFor: ['build-deploy-backend-dev']
+
+# Substitution variables for development
+substitutions:
+  _CLOUD_RUN_REGION: 'us-central1'
+  _CLOUD_RUN_SERVICE_NAME: 'deltaverse-api'
+  _GAR_LOCATION: 'us-central1'
+  _FIREBASE_API_KEY: 'AIzaSyDF_Jf5DTCH7GE4j6vyScuvTkOb7GnOW1o'
+  _FIREBASE_MESSAGING_SENDER_ID: '1029461078184'
+  _FIREBASE_APP_ID: '1:1029461078184:web:8762ad6bc8fa3e6edfd29d'
+  _FIREBASE_MEASUREMENT_ID: 'G-C3LCZ6L5FB'
+
+# Build options optimized for development
+options:
+  machineType: 'E2_STANDARD_4'
+  substitution_option: 'ALLOW_LOOSE'
+  timeout: '1200s'
+  logging: CLOUD_LOGGING_ONLY
