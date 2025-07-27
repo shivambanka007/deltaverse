@@ -4,11 +4,12 @@ DeltaVerse is a comprehensive financial AI platform that combines agentic AI cap
 
 ## 🏗️ Architecture Overview
 
-The project consists of three main applications:
+The project consists of four main applications:
 
 1. **deltaverse-ui** - React frontend with Redux state management
 2. **deltaverse-api** - FastAPI Python backend with Firebase integration
 3. **fi-mcp-dev-master** - Go-based MCP server for financial data simulation
+4. **fi-zen** - React Native mobile application for iOS and Android
 
 ## 📋 Prerequisites
 
@@ -163,6 +164,35 @@ REACT_APP_ENABLE_ANALYTICS=true
 REACT_APP_ENABLE_EMULATORS=true
 ```
 
+#### Mobile App Environment (fi-zen)
+```bash
+cd ../fi-zen
+cp .env.example .env
+```
+
+Edit `fi-zen/.env` (create if doesn't exist):
+```bash
+# API Configuration
+API_BASE_URL=http://localhost:8002
+FI_MCP_URL=http://localhost:8080
+
+# Firebase Configuration (same as web app)
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_API_KEY=your_firebase_api_key
+FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+FIREBASE_APP_ID=1:your_sender_id:web:your_app_id
+
+# Development Settings
+ENVIRONMENT=development
+DEBUG=true
+
+# Feature Flags
+ENABLE_ANALYTICS=true
+ENABLE_PUSH_NOTIFICATIONS=false
+```
+
 ### 3. Install Dependencies
 
 #### Backend Dependencies
@@ -187,6 +217,23 @@ npm install
 ```bash
 cd ../fi-mcp-dev-master
 go mod tidy
+```
+
+#### Mobile App Dependencies (fi-zen)
+```bash
+cd ../fi-zen
+
+# Install Node.js dependencies
+npm install
+
+# For iOS development (macOS only)
+cd ios
+bundle install
+bundle exec pod install
+cd ..
+
+# For Android development, ensure Android SDK is properly configured
+# Check React Native environment setup: npx react-native doctor
 ```
 
 ### 4. Firebase Setup (Required)
@@ -264,6 +311,295 @@ ENVIRONMENT=development PORT=8002 FI_MCP_URL=http://localhost:8080 python3 -m uv
 cd deltaverse-ui
 REACT_APP_API_URL=http://localhost:8002 REACT_APP_FI_MCP_URL=http://localhost:8080 npm start
 ```
+
+## 📱 Mobile Development (fi-zen)
+
+The fi-zen mobile application is built with React Native and supports both iOS and Android platforms.
+
+### Prerequisites for Mobile Development
+
+Before building the mobile app, ensure you have completed the React Native environment setup:
+
+#### For Android Development
+1. **Install Android Studio** - [Download](https://developer.android.com/studio)
+2. **Configure Android SDK**:
+   - Open Android Studio
+   - Go to SDK Manager (Tools > SDK Manager)
+   - Install Android SDK Platform 34 (or latest)
+   - Install Android SDK Build-Tools
+   - Install Android Emulator
+3. **Set Environment Variables**:
+   ```bash
+   # Add to your ~/.bashrc, ~/.zshrc, or ~/.bash_profile
+   export ANDROID_HOME=$HOME/Library/Android/sdk  # macOS
+   export ANDROID_HOME=$HOME/Android/Sdk          # Linux
+   export PATH=$PATH:$ANDROID_HOME/emulator
+   export PATH=$PATH:$ANDROID_HOME/platform-tools
+   ```
+4. **Install Java Development Kit (JDK 17)**
+
+#### For iOS Development (macOS only)
+1. **Install Xcode** - [Download from Mac App Store](https://apps.apple.com/us/app/xcode/id497799835)
+2. **Install Xcode Command Line Tools**:
+   ```bash
+   xcode-select --install
+   ```
+3. **Install CocoaPods**:
+   ```bash
+   sudo gem install cocoapods
+   ```
+
+### Setting Up the Mobile App
+
+#### 1. Navigate to fi-zen Directory
+```bash
+cd fi-zen
+```
+
+#### 2. Install Dependencies
+```bash
+# Install Node.js dependencies
+npm install
+
+# For iOS (macOS only)
+cd ios
+bundle install
+bundle exec pod install
+cd ..
+```
+
+#### 3. Environment Setup
+Create `.env` file in the fi-zen directory:
+```bash
+# API Configuration
+API_BASE_URL=http://localhost:8002
+FI_MCP_URL=http://localhost:8080
+
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_API_KEY=your_firebase_api_key
+FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+FIREBASE_APP_ID=1:your_sender_id:web:your_app_id
+
+# Development Settings
+ENVIRONMENT=development
+DEBUG=true
+```
+
+### Running the Mobile App
+
+#### Start Metro Bundler
+```bash
+# In the fi-zen directory
+npm start
+```
+
+#### Run on Android
+```bash
+# Make sure you have an Android emulator running or device connected
+npm run android
+
+# Alternative: using React Native CLI directly
+npx react-native run-android
+```
+
+#### Run on iOS (macOS only)
+```bash
+# Make sure you have iOS Simulator installed
+npm run ios
+
+# Alternative: using React Native CLI directly
+npx react-native run-ios
+
+# To run on a specific simulator
+npx react-native run-ios --simulator="iPhone 15 Pro"
+```
+
+### Building APK for Android
+
+#### Debug APK
+```bash
+cd android
+./gradlew assembleDebug
+
+# APK will be generated at:
+# android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+#### Release APK
+1. **Generate a signing key** (first time only):
+   ```bash
+   cd android/app
+   keytool -genkeypair -v -storename my-upload-key.keystore -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+2. **Configure signing** in `android/gradle.properties`:
+   ```properties
+   MYAPP_UPLOAD_STORE_FILE=my-upload-key.keystore
+   MYAPP_UPLOAD_KEY_ALIAS=my-key-alias
+   MYAPP_UPLOAD_STORE_PASSWORD=*****
+   MYAPP_UPLOAD_KEY_PASSWORD=*****
+   ```
+
+3. **Update build.gradle** (`android/app/build.gradle`):
+   ```gradle
+   android {
+       ...
+       signingConfigs {
+           release {
+               if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
+                   storeFile file(MYAPP_UPLOAD_STORE_FILE)
+                   storePassword MYAPP_UPLOAD_STORE_PASSWORD
+                   keyAlias MYAPP_UPLOAD_KEY_ALIAS
+                   keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+               }
+           }
+       }
+       buildTypes {
+           release {
+               ...
+               signingConfig signingConfigs.release
+           }
+       }
+   }
+   ```
+
+4. **Build release APK**:
+   ```bash
+   cd android
+   ./gradlew assembleRelease
+   
+   # APK will be generated at:
+   # android/app/build/outputs/apk/release/app-release.apk
+   ```
+
+### Building for iOS
+
+#### Debug Build
+```bash
+# Build for iOS Simulator
+npx react-native run-ios --configuration Debug
+
+# Build for device (requires Apple Developer account)
+npx react-native run-ios --device --configuration Debug
+```
+
+#### Release Build
+1. **Open Xcode**:
+   ```bash
+   open ios/FiMoney.xcworkspace
+   ```
+
+2. **Configure signing**:
+   - Select your project in Xcode
+   - Go to Signing & Capabilities
+   - Select your development team
+   - Configure bundle identifier
+
+3. **Build for release**:
+   - Product > Scheme > Edit Scheme
+   - Set Build Configuration to "Release"
+   - Product > Build
+   - Product > Archive (for App Store submission)
+
+### Mobile App Testing
+
+#### Unit Tests
+```bash
+# Run Jest tests
+npm test
+
+# Run tests with coverage
+npm test -- --coverage
+```
+
+#### End-to-End Testing
+```bash
+# Install Detox (if not already installed)
+npm install -g detox-cli
+
+# Build for testing
+detox build --configuration ios.sim.debug
+
+# Run E2E tests
+detox test --configuration ios.sim.debug
+```
+
+### Mobile App Debugging
+
+#### React Native Debugger
+1. **Install React Native Debugger**:
+   ```bash
+   # macOS
+   brew install --cask react-native-debugger
+   
+   # Or download from: https://github.com/jhen0409/react-native-debugger
+   ```
+
+2. **Enable debugging**:
+   - Shake device or press `Cmd+D` (iOS) / `Cmd+M` (Android)
+   - Select "Debug"
+
+#### Flipper Integration
+1. **Install Flipper**: [Download](https://fbflipper.com/)
+2. **Run the app** and Flipper should automatically detect it
+
+### Troubleshooting Mobile Development
+
+#### Common Android Issues
+1. **Metro bundler issues**:
+   ```bash
+   npx react-native start --reset-cache
+   ```
+
+2. **Gradle build failures**:
+   ```bash
+   cd android
+   ./gradlew clean
+   cd ..
+   npx react-native run-android
+   ```
+
+3. **ADB issues**:
+   ```bash
+   adb kill-server
+   adb start-server
+   ```
+
+#### Common iOS Issues
+1. **CocoaPods issues**:
+   ```bash
+   cd ios
+   pod deintegrate
+   pod install
+   cd ..
+   ```
+
+2. **Xcode build issues**:
+   - Clean build folder: Product > Clean Build Folder
+   - Reset simulator: Device > Erase All Content and Settings
+
+3. **Metro bundler cache**:
+   ```bash
+   npx react-native start --reset-cache
+   ```
+
+### Mobile App Configuration
+
+#### App Icons and Splash Screens
+- **Android**: Place icons in `android/app/src/main/res/mipmap-*` directories
+- **iOS**: Use Xcode to manage app icons and launch screens
+
+#### App Permissions
+- **Android**: Configure in `android/app/src/main/AndroidManifest.xml`
+- **iOS**: Configure in `ios/FiMoney/Info.plist`
+
+#### Deep Linking
+Configure URL schemes in:
+- **Android**: `android/app/src/main/AndroidManifest.xml`
+- **iOS**: `ios/FiMoney/Info.plist`
 
 ## 🌐 Access Points
 
@@ -390,7 +726,25 @@ docker-compose -f docker-compose.prod.yml up --build
    go mod tidy
    ```
 
-5. **Firebase Authentication Issues**:
+5. **Mobile App Issues (fi-zen)**:
+   ```bash
+   # Reset React Native cache
+   cd fi-zen
+   npx react-native start --reset-cache
+   
+   # Clean Android build
+   cd android
+   ./gradlew clean
+   cd ..
+   
+   # Reset iOS pods (macOS only)
+   cd ios
+   pod deintegrate
+   pod install
+   cd ..
+   ```
+
+6. **Firebase Authentication Issues**:
    - Verify Firebase project configuration
    - Check service account permissions
    - Ensure Firestore rules allow read/write access
