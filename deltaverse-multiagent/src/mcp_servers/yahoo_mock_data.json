@@ -1,0 +1,15 @@
+{
+  "stock_prices": {
+    "AAPL": 175.00,
+    "GOOGL": 1800.50,
+    "MSFT": 250.75
+  },
+  "market_indices": {
+    "S&P 500": 4500.20,
+    "NASDAQ": 15000.10
+  },
+  "news_headlines": [
+    "Tech stocks rally on strong earnings reports",
+    "Inflation concerns ease as Fed holds rates"
+  ]
+}

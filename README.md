@@ -4,12 +4,13 @@ DeltaVerse is a comprehensive financial AI platform that combines agentic AI cap
 
 ## 🏗️ Architecture Overview
 
-The project consists of four main applications:
+The project consists of five main applications:
 
 1. **deltaverse-ui** - React frontend with Redux state management
 2. **deltaverse-api** - FastAPI Python backend with Firebase integration
 3. **fi-mcp-dev-master** - Go-based MCP server for financial data simulation
 4. **fi-zen** - React Native mobile application for iOS and Android
+5. **deltaverse-multiagent** - Multi-agent AI system for personalized financial insights
 
 ## 📋 Prerequisites
 
@@ -193,6 +194,43 @@ ENABLE_ANALYTICS=true
 ENABLE_PUSH_NOTIFICATIONS=false
 ```
 
+#### Multi-Agent System Environment (deltaverse-multiagent)
+```bash
+cd ../deltaverse-multiagent
+cp .env.example .env
+```
+
+Edit `deltaverse-multiagent/.env`:
+```bash
+# GCP Configuration (for service account authentication)
+GCP_PROJECT_ID=your-gcp-project-id
+PUBSUB_TOPIC_PREFIX=deltaverse-financial-insights
+
+# MCP Server URLs (for local development)
+FI_MCP_SERVER_URL=http://localhost:8001
+YAHOO_MCP_SERVER_URL=http://localhost:8002
+MOSPI_API_SERVER_URL=http://localhost:8003
+MINT_MCP_SERVER_URL=http://localhost:8004
+YNAB_MCP_SERVER_URL=http://localhost:8005
+ZERODHA_COIN_MCP_SERVER_URL=http://localhost:8006
+ELEVENLABS_API_SERVER_URL=http://localhost:8007
+
+# Feature Flags (set to 'false' to enable mock data for specific agents)
+ENABLE_FI_MCP=true
+ENABLE_YAHOO_MCP=true
+ENABLE_MOSPI_API=true
+ENABLE_MINT_MCP=true
+ENABLE_YNAB_MCP=true
+ENABLE_ZERODHA_COIN_MCP=true
+ENABLE_ELEVENLABS_API=true
+
+# API Keys/Tokens for External Services (replace with your actual credentials)
+# YNAB_ACCESS_TOKEN=your_ynab_personal_access_token
+# KITE_API_KEY=your_zerodha_kite_api_key
+# KITE_API_SECRET=your_zerodha_kite_api_secret
+# ELEVENLABS_API_KEY=your_elevenlabs_api_key
+```
+
 ### 3. Install Dependencies
 
 #### Backend Dependencies
@@ -234,6 +272,23 @@ cd ..
 
 # For Android development, ensure Android SDK is properly configured
 # Check React Native environment setup: npx react-native doctor
+```
+
+#### Multi-Agent System Dependencies (deltaverse-multiagent)
+```bash
+cd ../deltaverse-multiagent
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install Go dependencies for fi-mcp-dev-master (if running locally)
+cd fi-mcp-dev-master
+go mod tidy
+cd ..
 ```
 
 ### 4. Firebase Setup (Required)
@@ -310,6 +365,23 @@ ENVIRONMENT=development PORT=8002 FI_MCP_URL=http://localhost:8080 python3 -m uv
 ```bash
 cd deltaverse-ui
 REACT_APP_API_URL=http://localhost:8002 REACT_APP_FI_MCP_URL=http://localhost:8080 npm start
+```
+
+#### Terminal 4: Multi-Agent System (Optional)
+```bash
+cd deltaverse-multiagent
+source .venv/bin/activate
+
+# Start the multi-agent system
+uvicorn src.main:app --host 0.0.0.0 --port 8000
+
+# Optional: Start additional MCP servers for specific agents
+# Terminal 4a: Yahoo MCP Server (if ENABLE_YAHOO_MCP=true)
+python src/mcp_servers/yfinance_mcp_server.py
+
+# Terminal 4b: Fi-MCP Server for multiagent (if different from main)
+cd fi-mcp-dev-master
+FI_MCP_PORT=8001 go run .
 ```
 
 ## 📱 Mobile Development (fi-zen)
@@ -601,6 +673,65 @@ Configure URL schemes in:
 - **Android**: `android/app/src/main/AndroidManifest.xml`
 - **iOS**: `ios/FiMoney/Info.plist`
 
+## 🤖 Multi-Agent System (deltaverse-multiagent)
+
+The deltaverse-multiagent system is an AI-powered multi-agent architecture designed to provide personalized financial insights through natural language queries. It orchestrates multiple specialized agents to process complex financial questions and deliver comprehensive responses.
+
+### Architecture
+
+The system follows a multi-agent pattern with these key components:
+
+- **Main API (FastAPI)**: Entry point for user interactions via `/query` endpoint
+- **Orchestrator Agent**: Breaks down user queries into sub-queries and coordinates task agents
+- **Evaluator Agent**: Assesses the quality and completeness of responses
+- **Task Agents**: Specialized agents for different financial data sources:
+  - **FI MCP Agent**: Connects to fi-mcp-dev-master for personal financial data
+  - **Yahoo MCP Agent**: Fetches stock market data via yfinance
+  - **MoSPI API Agent**: Government economic data (conceptual)
+  - **Mint MCP Agent**: Account balances and transactions (mock only)
+  - **YNAB MCP Agent**: Budget and transaction data from YNAB API
+  - **Zerodha Coin MCP Agent**: Investment portfolio data via Kite Connect
+  - **ElevenLabs API Agent**: Text-to-speech conversion
+
+### Key Features
+
+- **Feature Flags**: Enable/disable individual agents via environment variables
+- **Mock Data Integration**: Fallback to mock data when external services are unavailable
+- **Modular Architecture**: Easy to add new agents and data sources
+- **Authentication Support**: Service account and API key management
+
+### Usage Examples
+
+Once the system is running on `http://localhost:8000`, you can send POST requests to `/query`:
+
+```bash
+# General financial query
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"user_id": "test_user", "query": "How much money will I have at 40?"}' \
+  http://localhost:8000/query
+
+# Stock price query
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"user_id": "test_user", "query": "What is the stock price of AAPL?"}' \
+  http://localhost:8000/query
+
+# Budget information
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"user_id": "test_user", "query": "List my budgets"}' \
+  http://localhost:8000/query
+```
+
+### Agent Configuration
+
+Each agent can be enabled/disabled using environment variables:
+- `ENABLE_FI_MCP=true/false`
+- `ENABLE_YAHOO_MCP=true/false`
+- `ENABLE_YNAB_MCP=true/false`
+- `ENABLE_ZERODHA_COIN_MCP=true/false`
+- `ENABLE_ELEVENLABS_API=true/false`
+
+When disabled, agents return mock data for testing and development purposes.
+
 ## 🌐 Access Points
 
 Once all services are running:
@@ -609,6 +740,7 @@ Once all services are running:
 - **Backend API**: http://localhost:8002
 - **API Documentation**: http://localhost:8002/docs
 - **Fi-MCP Server**: http://localhost:8080
+- **Multi-Agent System**: http://localhost:8000 (API Documentation: http://localhost:8000/docs)
 
 ## 🧪 Testing the Setup
 
@@ -627,6 +759,13 @@ curl http://localhost:8002/health
 
 ### 3. Test Frontend
 Open http://localhost:3000 in your browser and verify the application loads.
+
+### 4. Test Multi-Agent System
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"user_id": "test_user", "query": "What is my net worth?"}' \
+  http://localhost:8000/query
+```
 
 ## 📊 Fi-MCP Test Data
 

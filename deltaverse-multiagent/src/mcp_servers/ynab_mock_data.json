@@ -1,0 +1,28 @@
+{
+  "accounts": [
+    {
+      "id": "123",
+      "name": "Checking",
+      "balance": 100000
+    },
+    {
+      "id": "456",
+      "name": "Savings",
+      "balance": 500000
+    }
+  ],
+  "budgets": [
+    {
+      "id": "789",
+      "name": "My Budget",
+      "categories": [
+        {
+          "name": "Groceries",
+          "budgeted": 5000,
+          "activity": -3000,
+          "balance": 2000
+        }
+      ]
+    }
+  ]
+}

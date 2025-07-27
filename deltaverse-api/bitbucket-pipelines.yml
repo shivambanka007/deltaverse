@@ -86,13 +86,13 @@ definitions:
               --region=$CLOUD_RUN_REGION \
               --platform=managed \
               --allow-unauthenticated \
-              --port=8000 \
-              --memory=512Mi \
-              --cpu=1 \
-              --min-instances=0 \
-              --max-instances=10 \
-              --set-env-vars="ENVIRONMENT=production" \
-              --timeout=300
+              --port=$CLOUD_RUN_PORT \
+              --memory=$CLOUD_RUN_MEMORY \
+              --cpu=$CLOUD_RUN_CPU \
+              --min-instances=$CLOUD_RUN_MIN_INSTANCES \
+              --max-instances=$CLOUD_RUN_MAX_INSTANCES \
+              --set-env-vars="ENVIRONMENT=$ENVIRONMENT,FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID,FIREBASE_PRIVATE_KEY_ID=$FIREBASE_PRIVATE_KEY_ID,FIREBASE_PRIVATE_KEY=$FIREBASE_PRIVATE_KEY,FIREBASE_CLIENT_EMAIL=$FIREBASE_CLIENT_EMAIL,FIREBASE_CLIENT_ID=$FIREBASE_CLIENT_ID,FIREBASE_AUTH_URI=$FIREBASE_AUTH_URI,FIREBASE_TOKEN_URI=$FIREBASE_TOKEN_URI,FI_MCP_URL=$FI_MCP_URL,FI_MCP_TIMEOUT=$FI_MCP_TIMEOUT,FI_MCP_MAX_RETRIES=$FI_MCP_MAX_RETRIES,VERTEX_AI_PROJECT_ID=$VERTEX_AI_PROJECT_ID,VERTEX_AI_LOCATION=$VERTEX_AI_LOCATION,GOOGLE_AI_API_KEY=$GOOGLE_AI_API_KEY,GEMINI_PRO_MODEL=$GEMINI_PRO_MODEL,GEMINI_FLASH_MODEL=$GEMINI_FLASH_MODEL,AI_TEMPERATURE=$AI_TEMPERATURE,AI_MAX_OUTPUT_TOKENS=$AI_MAX_OUTPUT_TOKENS,AI_TOP_P=$AI_TOP_P,AI_TOP_K=$AI_TOP_K,FIRESTORE_PROJECT_ID=$FIRESTORE_PROJECT_ID,API_V1_PREFIX=$API_V1_PREFIX,ALLOWED_HOSTS=$ALLOWED_HOSTS,SECRET_KEY=$SECRET_KEY,ACCESS_TOKEN_EXPIRE_MINUTES=$ACCESS_TOKEN_EXPIRE_MINUTES,LOG_LEVEL=$LOG_LEVEL" \
+              --timeout=$CLOUD_RUN_TIMEOUT
           
           # Get service URL
           - export SERVICE_URL=$(gcloud run services describe $CLOUD_RUN_SERVICE_NAME --region=$CLOUD_RUN_REGION --format='value(status.url)')
@@ -120,6 +120,8 @@ pipelines:
       - step: *lint-and-test
 
 # Required repository variables (set in Bitbucket repository settings):
+# 
+# Google Cloud Configuration:
 # - GCP_PROJECT_ID: Your Google Cloud Project ID
 # - GCP_SA_KEY: Base64 encoded service account key JSON
 # - GAR_LOCATION: Google Artifact Registry location (e.g., us-central1)
@@ -127,3 +129,57 @@ pipelines:
 # - GAR_IMAGE_NAME: Docker image name (e.g., deltaverse-api)
 # - CLOUD_RUN_SERVICE_NAME: Cloud Run service name
 # - CLOUD_RUN_REGION: Cloud Run deployment region (e.g., us-central1)
+# 
+# Cloud Run Service Configuration:
+# - CLOUD_RUN_PORT: Service port (default: 8000)
+# - CLOUD_RUN_MEMORY: Memory allocation (default: 512Mi)
+# - CLOUD_RUN_CPU: CPU allocation (default: 1)
+# - CLOUD_RUN_MIN_INSTANCES: Minimum instances (default: 0)
+# - CLOUD_RUN_MAX_INSTANCES: Maximum instances (default: 10)
+# - CLOUD_RUN_TIMEOUT: Request timeout in seconds (default: 300)
+# 
+# Application Environment Variables:
+# - ENVIRONMENT: Deployment environment (e.g., production, staging)
+# 
+# Firebase Configuration (Secured):
+# - FIREBASE_PROJECT_ID: Firebase project ID
+# - FIREBASE_PRIVATE_KEY_ID: Firebase service account private key ID
+# - FIREBASE_PRIVATE_KEY: Firebase service account private key (with newlines escaped)
+# - FIREBASE_CLIENT_EMAIL: Firebase service account email
+# - FIREBASE_CLIENT_ID: Firebase service account client ID
+# - FIREBASE_AUTH_URI: Firebase auth URI (default: https://accounts.google.com/o/oauth2/auth)
+# - FIREBASE_TOKEN_URI: Firebase token URI (default: https://oauth2.googleapis.com/token)
+# 
+# Fi-MCP Configuration:
+# - FI_MCP_URL: Fi-MCP server URL
+# - FI_MCP_TIMEOUT: Fi-MCP request timeout (default: 30)
+# - FI_MCP_MAX_RETRIES: Fi-MCP max retries (default: 3)
+# 
+# Vertex AI Configuration:
+# - VERTEX_AI_PROJECT_ID: Vertex AI project ID
+# - VERTEX_AI_LOCATION: Vertex AI location (default: us-central1)
+# 
+# Google AI Configuration (Secured):
+# - GOOGLE_AI_API_KEY: Google AI API key
+# - GEMINI_PRO_MODEL: Gemini Pro model name (default: gemini-1.5-pro-002)
+# - GEMINI_FLASH_MODEL: Gemini Flash model name (default: gemini-1.5-flash-002)
+# 
+# AI Model Configuration:
+# - AI_TEMPERATURE: AI model temperature (default: 0.7)
+# - AI_MAX_OUTPUT_TOKENS: AI model max output tokens (default: 1024)
+# - AI_TOP_P: AI model top-p parameter (default: 0.8)
+# - AI_TOP_K: AI model top-k parameter (default: 40)
+# 
+# Database Configuration:
+# - FIRESTORE_PROJECT_ID: Firestore project ID
+# 
+# API Configuration:
+# - API_V1_PREFIX: API v1 prefix (default: /api/v1)
+# - ALLOWED_HOSTS: Allowed hosts JSON array (e.g., ["http://localhost:3000"])
+# 
+# Security Configuration (Secured):
+# - SECRET_KEY: Application secret key (generate a secure random string)
+# - ACCESS_TOKEN_EXPIRE_MINUTES: JWT token expiration time (default: 30)
+# 
+# Logging Configuration:
+# - LOG_LEVEL: Application log level (default: INFO)

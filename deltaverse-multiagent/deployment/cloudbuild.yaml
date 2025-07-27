@@ -1,0 +1,31 @@
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/${_GCP_PROJECT_ID}/${_SERVICE_NAME}', '.']
+
+  # Push the Docker image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/${_GCP_PROJECT_ID}/${_SERVICE_NAME}']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - ${_SERVICE_NAME}
+      - --image=gcr.io/${_GCP_PROJECT_ID}/${_SERVICE_NAME}
+      - --region=${_GCP_REGION}
+      - --platform=managed
+      - --allow-unauthenticated # Or --no-allow-unauthenticated for authenticated access
+      - --set-env-vars=GCP_PROJECT_ID=${_GCP_PROJECT_ID},PUBSUB_TOPIC_PREFIX=${_PUBSUB_TOPIC_PREFIX},MCP_SERVER_BASE_URL=${_MCP_SERVER_BASE_URL}
+    entrypoint: gcloud
+images:
+  - gcr.io/${_GCP_PROJECT_ID}/${_SERVICE_NAME}
+
+substitutions:
+  _GCP_PROJECT_ID: your-gcp-project-id # REPLACE WITH YOUR GCP PROJECT ID
+  _SERVICE_NAME: deltaverse-multiagent-api
+  _GCP_REGION: us-central1 # REPLACE WITH YOUR DESIRED GCP REGION
+  _PUBSUB_TOPIC_PREFIX: deltaverse-financial-insights
+  _MCP_SERVER_BASE_URL: http://localhost:8001 # This will need to be updated to the actual Cloud Run service URLs for MCP servers

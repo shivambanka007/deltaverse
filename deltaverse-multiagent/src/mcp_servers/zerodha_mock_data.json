@@ -1,0 +1,24 @@
+{
+  "holdings": [
+    {
+      "instrument": "Reliance Industries",
+      "quantity": 100,
+      "avg_cost": 2400,
+      "current_price": 2500
+    },
+    {
+      "instrument": "HDFC Bank",
+      "quantity": 50,
+      "avg_cost": 1500,
+      "current_price": 1550
+    }
+  ],
+  "mutual_funds": [
+    {
+      "scheme": "Parag Parikh Flexi Cap Fund",
+      "units": 1000,
+      "nav": 25.50,
+      "invested_value": 20000
+    }
+  ]
+}

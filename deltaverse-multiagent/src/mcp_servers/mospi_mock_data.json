@@ -1,0 +1,12 @@
+{
+  "indian_economy_data": {
+    "gdp_growth_rate": 7.5,
+    "inflation_rate": 5.2,
+    "unemployment_rate": 6.8,
+    "fiscal_deficit": "6.4% of GDP"
+  },
+  "demographics": {
+    "population": 1400000000,
+    "literacy_rate": 77.7
+  }
+}

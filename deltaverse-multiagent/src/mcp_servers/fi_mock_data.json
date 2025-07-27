@@ -1,0 +1,14 @@
+{
+  "assets": {
+    "savings": 150000,
+    "investments": 500000,
+    "real_estate": 10000000
+  },
+  "liabilities": {
+    "credit_card_debt": 25000,
+    "home_loan": 4000000
+  },
+  "net_worth": 6625000,
+  "credit_score": 780,
+  "epf_balance": 800000
+}
